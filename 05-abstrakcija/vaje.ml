@@ -7,7 +7,7 @@
 [*----------------------------------------------------------------------------*)
 
 (*----------------------------------------------------------------------------*
- Definirajte signaturo `NAT`, ki določa strukturo naravnih števil. Ima osnovni
+ 1. Definirajte signaturo `NAT`, ki določa strukturo naravnih števil. Ima osnovni
  tip, funkcijo enakosti, ničlo in enko, seštevanje, odštevanje in množenje.
  Hkrati naj vsebuje pretvorbe iz in v OCamlov `int` tip. Opomba: Funkcije za
  pretvarjanje ponavadi poimenujemo `to_int` and `of_int`, tako da skupaj z
@@ -17,33 +17,35 @@
 
 module type NAT = sig
   type t
-
   val eq  : t -> t -> bool
   val zero : t
-  (* Dodajte manjkajoče! *)
-  (* val to_int : t -> int *)
-  (* val of_int : int -> t *)
+  val to_int : t -> int
+  val of_int : int -> t 
 end
 
 (*----------------------------------------------------------------------------*
- Napišite implementacijo modula `Nat_int`, ki zgradi modul s signaturo `NAT`,
+ 2. Napišite implementacijo modula `Nat_int`, ki zgradi modul s signaturo `NAT`,
  kjer kot osnovni tip uporablja OCamlov tip `int`. Namig: dokler ne
- implementirate vse funkcij v `Nat_int`, se bo OCaml pritoževal. Temu se lahko
+ implementirate vseh funkcij v `Nat_int`, se bo OCaml pritoževal. Temu se lahko
  izognete tako, da funkcije, ki še niso napisane nadomestite z `failwith
  "later"`, vendar to ne deluje za konstante.
 [*----------------------------------------------------------------------------*)
 
-module Nat_int : NAT = struct
-
-  type t = int
-  let eq x y = failwith "later"
-  let zero = 0
-  (* Dodajte manjkajoče! *)
-
+module Natint : NAT = struct
+  type t = 
+  | T of int
+  let to_int (x:t)= 
+    match x with
+    | T x -> x 
+  let of_int (x:int)= 
+    T x
+  let eq (x:t) (y:t) = if (to_int x) = (to_int y) then true else false
+  let zero = T 0
+  let one = T 1
 end
 
 (*----------------------------------------------------------------------------*
- Napišite implementacijo `NAT`, ki temelji na [Peanovih
+ 3. Napišite implementacijo `NAT`, ki temelji na [Peanovih
  aksiomih](https://en.wikipedia.org/wiki/Peano_axioms). Osnovni tip modula
  definirajte kot naštevni tip, ki vsebuje konstruktor za ničlo in konstruktor za
  naslednika nekega naravnega števila. Večino funkcij lahko implementirate s
@@ -52,16 +54,27 @@ end
 [*----------------------------------------------------------------------------*)
 
 module Nat_peano : NAT = struct
+  type t =
+  | Nic
+  | Naslednik of t
 
-  type t = unit (* To morate spremeniti! *)
-  let eq x y = failwith "later"
-  let zero = () (* To morate spremeniti! *)
-  (* Dodajte manjkajoče! *)
+  let rec to_int x =
+    match x with
+    | Nic ->  0
+    | Naslednik y -> 1 + to_int y
+
+  let rec of_int n =
+    match n with
+    | 0 -> Nic
+    | n -> Naslednik (of_int (n - 1)) 
+
+  let eq (x) (y) = if (to_int x) = (to_int y) then true else false 
+  let zero = Nic
 
 end
 
 (*----------------------------------------------------------------------------*
- Z ukazom `let module ImeModula = ... in ...` lahko modul definiramo samo
+ 4. Z ukazom `let module ImeModula = ... in ...` lahko modul definiramo samo
  lokalno. To bomo uporabili za to, da bomo lahko enostavno preklapljali med
  moduloma `Nat_int` in `Nat_peano`, saj bomo enega ali drugega shranili pod ime
  `Nat`. OCaml sicer pozna tudi ustrezne abstrakcije, ki omogočijo preklapljanje
@@ -75,11 +88,49 @@ end
  pravilno, bi morali dobiti enak rezultat ne glede na to, katerega poimenujete
  `Nat`.
 [*----------------------------------------------------------------------------*)
-
+(*Zakaj tole ne dela? 
 let sum_nat_100 = 
   (* let module Nat = Nat_int in *)
   let module Nat = Nat_peano in
-  Nat.zero (* to popravite na ustrezen izračun *)
+  let rec aux acc n =
+    match n with
+    | Nat.zero -> acc
+    | Nat.t m -> aux (Nat.t acc) m
+    | _ -> failwith "Nekaj je narobe"
+  in 
+  let rec sestej acc n =
+    match n with
+    | Nat.zero -> let sestej acc (Nat.t (Nat.zero))
+    | x when (Nat.eq x (of_int 101)) -> Nat.to_int acc
+    | m -> sestej (aux acc m) (Nat.t m)
+  in 
+  sestej Nat.zero Nat.zero 
+
+  *)
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ (* to popravite na ustrezen izračun *)
   (* |> Nat.to_int *)
 (* val sum_nat_100 : int = 5050 *)
 
