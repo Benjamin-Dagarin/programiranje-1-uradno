@@ -19,8 +19,12 @@ module type NAT = sig
   type t
   val eq  : t -> t -> bool
   val zero : t
+  val one : t
   val to_int : t -> int
-  val of_int : int -> t 
+  val of_int : int -> t
+  val ( ++ ) : t -> t -> t
+  val ( -- ) : t -> t -> t
+  val ( ** ) : t -> t -> t
 end
 
 (*----------------------------------------------------------------------------*
@@ -42,6 +46,9 @@ module Natint : NAT = struct
   let eq (x:t) (y:t) = if (to_int x) = (to_int y) then true else false
   let zero = T 0
   let one = T 1
+  let ( ++ ) (x:t) (y:t) = of_int (to_int x + to_int y)
+  let ( -- ) (x:t) (y:t) = if (to_int x - to_int y) < 0 then of_int 0 else of_int (to_int x - to_int y)
+  let ( ** ) (x:t) (y:t) = of_int (to_int x + to_int y)
 end
 
 (*----------------------------------------------------------------------------*
@@ -68,8 +75,22 @@ module Nat_peano : NAT = struct
     | 0 -> Nic
     | n -> Naslednik (of_int (n - 1)) 
 
+    (* Ena možnost
   let eq (x) (y) = if (to_int x) = (to_int y) then true else false 
+*)
+  let rec eq x y =
+    match x, y with
+    | Nic, Nic -> true
+    | Nic, Naslednik s -> false
+    | Naslednik s, Nic -> false
+    | Naslednik s, Naslednik k -> eq s k
+
   let zero = Nic
+  let one = Naslednik Nic
+
+  let ( ++ ) (x:t) (y:t) = of_int (to_int x + to_int y)
+  let ( -- ) (x:t) (y:t) = if ((to_int x - to_int y) < 0) then (of_int 0) else (of_int (to_int x - to_int y))
+  let ( ** ) (x:t) (y:t) = of_int (to_int x + to_int y)
 
 end
 
@@ -88,46 +109,21 @@ end
  pravilno, bi morali dobiti enak rezultat ne glede na to, katerega poimenujete
  `Nat`.
 [*----------------------------------------------------------------------------*)
-(*Zakaj tole ne dela? 
-let sum_nat_100 = 
-  (* let module Nat = Nat_int in *)
+(* Nasveti od Ruslana:
+- v funkciji aux ni potrebno matchati acc, saj ga že ocaml matcha
+- v funkcijah ni potrebno specificirati tipov argumentov, saj jih ocaml zna
+izračunati
+*)
+  
+let sum_nat_100 =
   let module Nat = Nat_peano in
-  let rec aux acc n =
-    match n with
-    | Nat.zero -> acc
-    | Nat.t m -> aux (Nat.t acc) m
-    | _ -> failwith "Nekaj je narobe"
-  in 
-  let rec sestej acc n =
-    match n with
-    | Nat.zero -> let sestej acc (Nat.t (Nat.zero))
-    | x when (Nat.eq x (of_int 101)) -> Nat.to_int acc
-    | m -> sestej (aux acc m) (Nat.t m)
-  in 
-  sestej Nat.zero Nat.zero 
+  let rec aux (acc) (st) =
+    match st with
+    | 0 -> acc
+    | x -> aux (Nat.(++) acc (Nat.of_int x)) (x-1)
+  in Nat.to_int (aux (Nat.zero) 100)
 
-  *)
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+(* Nat.zero ne moremo matchati!!! Zato moramo napisati | x -> if x = Nat.zero then ... ali pa | x when x = Nat.zero -> ...*)
 
 
  (* to popravite na ustrezen izračun *)
@@ -139,42 +135,42 @@ let sum_nat_100 =
 [*----------------------------------------------------------------------------*)
 
 (*----------------------------------------------------------------------------*
- > Once upon a time, there was a university with a peculiar tenure
- > policy. All faculty were tenured, and could only be dismissed for
- > moral turpitude. What was peculiar was the definition of moral
- > turpitude: making a false statement in class. Needless to say, the
- > university did not teach computer science. However, it had a renowned
- > department of mathematics.
- >
- > One Semester, there was such a large enrollment in complex variables
- > that two sections were scheduled. In one section, Professor Descartes
- > announced that a complex number was an ordered pair of reals, and that
- > two complex numbers were equal when their corresponding components
- > were equal. He went on to explain how to convert reals into complex
- > numbers, what "i" was, how to add, multiply, and conjugate complex
- > numbers, and how to find their magnitude.
- >
- > In the other section, Professor Bessel announced that a complex number
- > was an ordered pair of reals the first of which was nonnegative, and
- > that two complex numbers were equal if their first components were
- > equal and either the first components were zero or the second
- > components differed by a multiple of 2π. He then told an entirely
- > different story about converting reals, "i", addition, multiplication,
- > conjugation, and magnitude.
- >
- > Then, after their first classes, an unfortunate mistake in the
- > registrar's office caused the two sections to be interchanged. Despite
- > this, neither Descartes nor Bessel ever committed moral turpitude,
- > even though each was judged by the other's definitions. The reason was
- > that they both had an intuitive understanding of type. Having defined
- > complex numbers and the primitive operations upon them, thereafter
- > they spoke at a level of abstraction that encompassed both of their
- > definitions.
- >
- > The moral of this fable is that: Type structure is a syntactic
- > discipline for enforcing levels of abstraction.
- >
- > John C. Reynolds, _Types, Abstraction, and Parametric Polymorphism_, IFIP83
+ Once upon a time, there was a university with a peculiar tenure
+ policy. All faculty were tenured, and could only be dismissed for
+ moral turpitude. What was peculiar was the definition of moral
+ turpitude: making a false statement in class. Needless to say, the
+ university did not teach computer science. However, it had a renowned
+ department of mathematics.
+
+ One Semester, there was such a large enrollment in complex variables
+ that two sections were scheduled. In one section, Professor Descartes
+ announced that a complex number was an ordered pair of reals, and that
+ two complex numbers were equal when their corresponding components
+ were equal. He went on to explain how to convert reals into complex
+ numbers, what "i" was, how to add, multiply, and conjugate complex
+ numbers, and how to find their magnitude.
+
+ In the other section, Professor Bessel announced that a complex number
+ was an ordered pair of reals the first of which was nonnegative, and
+ that two complex numbers were equal if their first components were
+ equal and either the first components were zero or the second
+ components differed by a multiple of 2π. He then told an entirely
+ different story about converting reals, "i", addition, multiplication,
+ conjugation, and magnitude.
+
+ Then, after their first classes, an unfortunate mistake in the
+ registrar's office caused the two sections to be interchanged. Despite
+ this, neither Descartes nor Bessel ever committed moral turpitude,
+ even though each was judged by the other's definitions. The reason was
+ that they both had an intuitive understanding of type. Having defined
+ complex numbers and the primitive operations upon them, thereafter
+ they spoke at a level of abstraction that encompassed both of their
+ definitions.
+
+ The moral of this fable is that: Type structure is a syntactic
+ discipline for enforcing levels of abstraction.
+
+ John C. Reynolds, _Types, Abstraction, and Parametric Polymorphism_, IFIP83
 [*----------------------------------------------------------------------------*)
 
 (*----------------------------------------------------------------------------*
@@ -186,6 +182,14 @@ let sum_nat_100 =
 module type COMPLEX = sig
   type t
   val eq : t -> t -> bool
+  val zero: t
+  val one: t
+  val i : t
+  val neg: t -> t
+  val konj: t -> t
+  val ( ++ ): t -> t -> t
+  val ( -- ): t -> t -> t
+  val ( ** ): t -> t -> t
   (* Dodajte manjkajoče! *)
 end
 
@@ -198,7 +202,16 @@ module Cartesian : COMPLEX = struct
 
   type t = {re : float; im : float}
 
-  let eq x y = failwith "later"
+  let eq x y = if (x.re = y.re && x.im = y.im) then true else false
+  let zero = {re = 0.; im = 0.}
+  let one = {re = 1.; im = 0.}
+  let i = {re=0.; im=1.}
+  let neg x = {re = -.x.re; im = -.x.im}
+  let konj x = {re = x.re; im = -.x.im}
+  let ( ++ ) x y = {re = x.re +. y.re; im = x.im +. y.im}
+  let ( -- ) x y = {re = x.re -. y.re; im = x.im -. y.im}
+  let ( ** ) x y = {re = x.re *. y.re -. x.im *. y.im; im = x.im *. y.re +. x.re *. y.im}
+
   (* Dodajte manjkajoče! *)
 
 end
@@ -219,7 +232,13 @@ module Polar : COMPLEX = struct
   let rad_of_deg deg = (deg /. 180.) *. pi
   let deg_of_rad rad = (rad /. pi) *. 180.
 
-  let eq x y = failwith "later"
+  let eq x y = if (x.magn = y.magn && x.arg -. y.arg = pi) then true else false
+  let zero = {magn = 0.; arg = float}
+  let one = {magn = 1.; arg = 0.}
+  let i = {magn = 1.; arg = (rad_of_deg 90)}
+  let neg x = {magn = x.magn; arg = (x.arg +. pi)}
+  let konj x = {magn = x.magn; arg = (-. x.arg)}
+  let ( ++ ) x y = {magn = x.}
   (* Dodajte manjkajoče! *)
 
 end
