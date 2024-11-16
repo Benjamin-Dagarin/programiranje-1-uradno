@@ -190,7 +190,6 @@ module type COMPLEX = sig
   val ( ++ ): t -> t -> t
   val ( -- ): t -> t -> t
   val ( ** ): t -> t -> t
-  (* Dodajte manjkajoče! *)
 end
 
 (*----------------------------------------------------------------------------*
@@ -212,7 +211,6 @@ module Cartesian : COMPLEX = struct
   let ( -- ) x y = {re = x.re -. y.re; im = x.im -. y.im}
   let ( ** ) x y = {re = x.re *. y.re -. x.im *. y.im; im = x.im *. y.re +. x.re *. y.im}
 
-  (* Dodajte manjkajoče! *)
 
 end
 
@@ -226,19 +224,33 @@ end
 module Polar : COMPLEX = struct
 
   type t = {magn : float; arg : float}
-
-  (* Pomožne funkcije za lažje življenje. *)
   let pi = 2. *. acos 0.
   let rad_of_deg deg = (deg /. 180.) *. pi
   let deg_of_rad rad = (rad /. pi) *. 180.
-
-  let eq x y = if (x.magn = y.magn && x.arg -. y.arg = pi) then true else false
-  let zero = {magn = 0.; arg = float}
+  let eq x y = if ((x.magn = y.magn) && (x.arg = y.arg) ) then true else false
+  let zero = {magn = 0.; arg = 0.}
   let one = {magn = 1.; arg = 0.}
-  let i = {magn = 1.; arg = (rad_of_deg 90)}
+  let i = {magn = 1.; arg = 90.}
   let neg x = {magn = x.magn; arg = (x.arg +. pi)}
   let konj x = {magn = x.magn; arg = (-. x.arg)}
-  let ( ++ ) x y = {magn = x.}
-  (* Dodajte manjkajoče! *)
-
+  let ( ++ ) (x) (y) =
+  let xab =  x.magn *. (cos (rad_of_deg x.arg)) +. y.magn *. cos (rad_of_deg y.arg) in
+  let yab = (x.magn *. (sin (rad_of_deg x.arg))) +. y.magn *. sin (rad_of_deg y.arg) in
+  let rab = sqrt (xab *. xab +. yab *. yab) in
+  let phiab = Float.atan ((x.magn *. (sin (rad_of_deg x.arg)) +. y.magn *. sin (rad_of_deg y.arg)) /. ((x.magn *. (cos (rad_of_deg x.arg))) +. y.magn *. cos (rad_of_deg y.arg)))
+  in {magn = rab; arg = phiab}
+  
+  let ( -- ) x y =
+  let my = neg y in
+   (++) x my
+  
+  let ( ** ) x y = {magn = x.magn *. y.magn; arg = x.arg +. y.arg}
 end
+
+
+
+let ( ++ ) = Polar.( ++ )
+
+let c = ( ++ ) {magnitude = 3.; arg = 4.} {}
+
+
