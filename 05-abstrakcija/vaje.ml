@@ -249,8 +249,8 @@ end
 
 
 
-let ( ++ ) = Polar.( ++ )
+let a = Polar.{magn = 10.; arg = 90.}
+let b = Polar.{magn = 223.; arg = 10.}
 
-let c = ( ++ ) {magnitude = 3.; arg = 4.} {}
 
 
