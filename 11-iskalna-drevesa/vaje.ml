@@ -5,7 +5,9 @@
  bodisi prazna, bodisi pa vsebujejo podatek in imajo dve (morda prazni)
  poddrevesi. Na tej točki ne predpostavljamo ničesar drugega o obliki dreves.
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
-
+type drevo =
+| Prazno
+| Sestavljeno of drevo * int * drevo 
 
 (*----------------------------------------------------------------------------*]
  Definirajmo si testni primer za preizkušanje funkcij v nadaljevanju. Testni
@@ -17,6 +19,13 @@
        /   / \
       0   6   11
 [*----------------------------------------------------------------------------*)
+let rec leaf drev listek = 
+     match drev with
+     | Prazno  -> Sestavljeno (Prazno, listek, Prazno)
+     | Sestavljeno (t_1, x, t_2) when listek = x -> Sestavljeno (t_1, x, t_2) 
+     | Sestavljeno (t_1, x, t_2) when listek < x -> Sestavljeno ((leaf t_1 listek), x,  t_2)
+     | Sestavljeno (t_1, x, t_2) when listek > x -> Sestavljeno (t_1, x,  (leaf t_2 listek))
+     | Sestavljeno (_, _, _) -> assert false
 
 
 (*----------------------------------------------------------------------------*]
