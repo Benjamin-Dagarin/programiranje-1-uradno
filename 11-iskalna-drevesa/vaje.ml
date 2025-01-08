@@ -5,9 +5,10 @@
  bodisi prazna, bodisi pa vsebujejo podatek in imajo dve (morda prazni)
  poddrevesi. Na tej točki ne predpostavljamo ničesar drugega o obliki dreves.
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
-type drevo =
+
+type 'a drevo =
 | Prazno
-| Sestavljeno of drevo * int * drevo 
+| Sestavljeno of 'a drevo * 'a *  'a drevo 
 
 (*----------------------------------------------------------------------------*]
  Definirajmo si testni primer za preizkušanje funkcij v nadaljevanju. Testni
@@ -19,6 +20,8 @@ type drevo =
        /   / \
       0   6   11
 [*----------------------------------------------------------------------------*)
+let test_tree = Sestavljeno ((Sestavljeno (Sestavljeno (Prazno, 0, Prazno), 2, Prazno)), 5, Sestavljeno ((Sestavljeno (Prazno, 6, Prazno)), 7, (Sestavljeno (Prazno, 11, Prazno))))
+
 let rec leaf drev listek = 
      match drev with
      | Prazno  -> Sestavljeno (Prazno, listek, Prazno)
@@ -26,7 +29,6 @@ let rec leaf drev listek =
      | Sestavljeno (t_1, x, t_2) when listek < x -> Sestavljeno ((leaf t_1 listek), x,  t_2)
      | Sestavljeno (t_1, x, t_2) when listek > x -> Sestavljeno (t_1, x,  (leaf t_2 listek))
      | Sestavljeno (_, _, _) -> assert false
-
 
 (*----------------------------------------------------------------------------*]
  Funkcija [mirror] vrne prezrcaljeno drevo. Na primeru [test_tree] torej vrne
@@ -41,7 +43,12 @@ let rec leaf drev listek =
  Node (Node (Node (Empty, 11, Empty), 7, Node (Empty, 6, Empty)), 5,
  Node (Empty, 2, Node (Empty, 0, Empty)))
 [*----------------------------------------------------------------------------*)
+let rec mirror drev =
+     match drev with
+     | Prazno -> Prazno
+     | Sestavljeno (drev1, x, drev2) -> Sestavljeno (mirror drev2, x, mirror drev1)
 
+let prezrcaljeno = mirror test_tree
 
 (*----------------------------------------------------------------------------*]
  Funkcija [height] vrne višino oz. globino drevesa, funkcija [size] pa število
@@ -52,7 +59,19 @@ let rec leaf drev listek =
  # size test_tree;;
  - : int = 6
 [*----------------------------------------------------------------------------*)
+let rec visina drev =
+     match drev with
+     | Prazno -> 0
+     | Sestavljeno (veja1, x, veja2) -> 1 + max (visina veja1) (visina veja2)
 
+let rec velikost drev =
+     match drev with
+     | Prazno -> 0
+     | Sestavljeno (veja1, x, veja2) -> 1 + velikost veja1 + velikost veja2
+
+
+let visina_testnega = visina test_tree
+let velikost_testnega = velikost test_tree
 
 (*----------------------------------------------------------------------------*]
  Funkcija [map_tree f tree] preslika drevo v novo drevo, ki vsebuje podatke
@@ -64,6 +83,13 @@ let rec leaf drev listek =
  Node (Node (Empty, true, Empty), true, Node (Empty, true, Empty)))
 [*----------------------------------------------------------------------------*)
 
+let rec map_tree f drev = 
+     match drev with
+     | Prazno -> Prazno
+     | Sestavljeno (veja1, x, veja2) -> Sestavljeno (map_tree f veja1, f x, map_tree f veja2)
+
+let bl_drev =  map_tree ((<)3) test_tree
+
 
 (*----------------------------------------------------------------------------*]
  Funkcija [list_of_tree] pretvori drevo v seznam. Vrstni red podatkov v seznamu
@@ -73,6 +99,12 @@ let rec leaf drev listek =
  - : int list = [0; 2; 5; 6; 7; 11]
 [*----------------------------------------------------------------------------*)
 
+let list_of_tree drev =
+  let rec aux drev' acc =
+    match drev' with
+    | Prazno -> acc
+    | Sestavljeno (l, x, d) -> aux l (x :: aux d acc)
+  in aux drev []
 
 (*----------------------------------------------------------------------------*]
  Funkcija [is_bst] preveri ali je drevo binarno iskalno drevo (Binary Search 
