@@ -17,12 +17,26 @@ Natančno definirajte pogoje, da funkcija `f` uredi seznam.
  # insert 7 [];;
  - : int list = [7]
 [*----------------------------------------------------------------------------*)
+let rec insert y xs =
+  match xs with
+  | [] -> [y]
+  | glava :: rep -> if glava < y then glava :: (insert y rep) else  y :: (glava :: rep)
+
 
 
 (*----------------------------------------------------------------------------*]
  Prazen seznam je že urejen. Funkcija [insert_sort] uredi seznam tako da
  zaporedoma vstavlja vse elemente seznama v prazen seznam.
 [*----------------------------------------------------------------------------*)
+let insert_sort sez =
+  let rec aux sez' acc =
+    match sez' with
+    | [] -> acc
+    | glava :: rep -> aux rep (List.append acc [glava])
+  in
+  aux sez []
+
+
 
 
 

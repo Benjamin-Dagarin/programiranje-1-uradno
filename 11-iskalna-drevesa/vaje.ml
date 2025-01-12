@@ -106,6 +106,7 @@ let list_of_tree drev =
     | Sestavljeno (l, x, d) -> aux l (x :: aux d acc)
   in aux drev []
 
+let v_seznam = list_of_tree test_tree
 (*----------------------------------------------------------------------------*]
  Funkcija [is_bst] preveri ali je drevo binarno iskalno drevo (Binary Search 
  Tree, na kratko BST). Predpostavite, da v drevesu ni ponovitev elementov, 
@@ -117,6 +118,30 @@ let list_of_tree drev =
  - : bool = false
 [*----------------------------------------------------------------------------*)
 
+let is_bst drev =
+     let izlusci_koren drev' =
+          match drev' with
+          | Prazno -> None
+          | Sestavljeno (l, x, d) -> Some x
+     in
+     let primerjava l x d =
+          let ll = izlusci_koren l
+          in
+          let dd = izlusci_koren d in
+          match ll, x, dd with
+          | None, y, None -> 0
+          | Some y, z, None -> if y <= z then 0 else 1
+          | None, z, Some y -> if z <= y then 0 else 1
+          | Some y, z, Some w -> if y <= z && w >= z then 0 else 1
+
+     in 
+     let rec pomozna drev' = 
+          match drev' with
+          | Prazno -> 0
+          | Sestavljeno (l, x, d) -> (primerjava l x d)  + pomozna l + pomozna d
+     in
+     if pomozna drev > 0 then false else true
+
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  V nadaljevanju predpostavljamo, da imajo dvojiška drevesa strukturo BST.
@@ -124,25 +149,46 @@ let list_of_tree drev =
 
 (*----------------------------------------------------------------------------*]
  Funkcija [insert] v iskalno drevo pravilno vstavi dani element. Funkcija 
- [member] preveri ali je dani element v iskalnem drevesu.
+ [member] preveri, ali je dani element v iskalnem drevesu.
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  # insert 2 (leaf 4);;
  - : int tree = Node (Node (Empty, 2, Empty), 4, Empty)
  # member 3 test_tree;;
  - : bool = false
 [*----------------------------------------------------------------------------*)
+let rec insert el drev =
+     match drev with
+     | Prazno -> Sestavljeno (Prazno, el, Prazno)
+     | Sestavljeno (l, x, d) -> if el = x then Sestavljeno (l, x, d) else
+          if el < x then Sestavljeno ((insert el l), x, d) else
+               Sestavljeno (l, x, insert el d)
+
+let rec member el drev =
+     match drev with
+     | Prazno -> false
+     | Sestavljeno (l, x, d) -> if el = x then true else if el < x then member el l
+     else member el d
 
 
 (*----------------------------------------------------------------------------*]
  Funkcija [member2] ne privzame, da je drevo bst.
  
- Opomba: Premislte kolikšna je časovna zahtevnost funkcije [member] in kolikšna
+ Opomba: Premislite kolikšna je časovna zahtevnost funkcije [member] in kolikšna
  funkcije [member2] na drevesu z n vozlišči, ki ima globino log(n). 
 [*----------------------------------------------------------------------------*)
+let member2 el drev = 
+     let sez_iz_drevesa = list_of_tree drev in
+     List.mem el sez_iz_drevesa
+
+(*
+member - O (log_2 n)
+member2 - O (n)
+*)
+
 
 
 (*----------------------------------------------------------------------------*]
- Funkcija [succ] vrne naslednjika korena danega drevesa, če obstaja. Za drevo
+ Funkcija [succ] vrne naslednika korena danega drevesa, če obstaja. Za drevo
  oblike [bst = Node(l, x, r)] vrne najmanjši element drevesa [bst], ki je večji
  od korena [x].
  Funkcija [pred] simetrično vrne največji element drevesa, ki je manjši od
@@ -153,6 +199,42 @@ let list_of_tree drev =
  # pred (Node(Empty, 5, leaf 7));;
  - : int option = None
 [*----------------------------------------------------------------------------*)
+let succ drev =
+     let rec aux drev' st trenutni_koren =
+          match drev' with
+          | Prazno -> trenutni_koren
+          | Sestavljeno (l, x, d) when st = 0 -> aux d 1 x
+          | Sestavljeno (l, x, d) when st > 0 -> aux l st x
+          | _ -> assert false
+     in 
+     let izlusci_koren drev' =
+          match drev' with
+          | Prazno -> None
+          | Sestavljeno (l, x, d) -> Some x
+     in 
+     let koren = izlusci_koren drev in
+     match koren with
+     | None -> None
+     | Some x -> Some (aux drev 0 x)
+
+let pred drev =
+     let rec aux drev' st trenutni_koren =
+          match drev' with
+          | Prazno -> trenutni_koren
+          | Sestavljeno (l, x, d) when st = 0 -> aux l 1 x
+          | Sestavljeno (l, x, d) when st > 0 -> aux d st x
+          | _ -> assert false
+     in 
+     let izlusci_koren drev' =
+          match drev' with
+          | Prazno -> None
+          | Sestavljeno (l, x, d) -> Some x
+     in 
+     let koren = izlusci_koren drev in
+     match koren with
+     | None -> None
+     | Some x -> Some (aux drev 0 x)
+
 
 
 (*----------------------------------------------------------------------------*]
@@ -167,6 +249,24 @@ let list_of_tree drev =
  Node (Node (Node (Empty, 0, Empty), 2, Empty), 5,
  Node (Node (Empty, 6, Empty), 11, Empty))
 [*----------------------------------------------------------------------------*)
+let novo_testno_drevo = Sestavljeno (Sestavljeno (Sestavljeno (Sestavljeno (Sestavljeno (Prazno, 2, Prazno), 3, Sestavljeno (Prazno, 4, Prazno)), 5, Prazno), 6, Sestavljeno (Sestavljeno (Prazno, 8, Prazno), 10, Sestavljeno (Prazno, 11, Prazno))), 12, Sestavljeno ((Sestavljeno (Sestavljeno (Prazno, 13, Prazno), 14, Prazno)), 15, Sestavljeno (Sestavljeno (Prazno, 17, Prazno),18,Sestavljeno (Prazno, 19, Prazno))))
+
+(*
+let delete x drev =
+     if member x drev = false then drev else
+     let sestavi_novo_drevo trenutno_drevo = 
+
+     let rec najdi_drevo_s_korenom x drev =
+          match drev with
+          | Prazno -> Prazno
+          | Sestavljeno (l, y, d) when x = y -> Sestavljeno (l, x, d)
+          | Sestavljeno (l, y, d) when x < y -> Sestavljeno (najdi_drevo_s_korenom x l, y, d)
+          | Sestavljeno (l, y, d) when x > y -> Sestavljeno (l, y, najdi_drevo_s_korenom x d)
+          | _ -> assert false
+
+*) 
+
+
 
 
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
