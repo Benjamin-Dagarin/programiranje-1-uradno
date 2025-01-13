@@ -251,24 +251,49 @@ let pred drev =
 [*----------------------------------------------------------------------------*)
 let novo_testno_drevo = Sestavljeno (Sestavljeno (Sestavljeno (Sestavljeno (Sestavljeno (Prazno, 2, Prazno), 3, Sestavljeno (Prazno, 4, Prazno)), 5, Prazno), 6, Sestavljeno (Sestavljeno (Prazno, 8, Prazno), 10, Sestavljeno (Prazno, 11, Prazno))), 12, Sestavljeno ((Sestavljeno (Sestavljeno (Prazno, 13, Prazno), 14, Prazno)), 15, Sestavljeno (Sestavljeno (Prazno, 17, Prazno),18,Sestavljeno (Prazno, 19, Prazno))))
 
-(*
-let delete x drev =
-     if member x drev = false then drev else
-     let sestavi_novo_drevo trenutno_drevo = 
-
-     let rec najdi_drevo_s_korenom x drev =
-          match drev with
+let delete z drev =
+     if member z drev = false then drev else
+     let izlusci_pred drevo' =
+          match pred drevo' with
+          | Some x -> x
+          | None -> assert false
+     in 
+    (* let izlusci_koren drev' =
+          match drev' with
+          | Prazno -> None
+          | Sestavljeno (l, x, d) -> Some x
+     in
+     let izlusci_koren' znak =
+          match znak with
+          | Some x -> x
+          | _ -> assert false
+     in
+     let razvejanost drev' el =
+          match drev' with
+          | Prazno -> 0
+          | Sestavljeno (Prazno, x, Prazno) -> 1
+          | Sestavljeno (ld, x, Prazno) -> 2
+          | Sestavljeno (Prazno, x, dd) -> 3
+          | Sestavljeno (l, x, d) -> 4
+          in
+     *)
+     let rec sestavi_novo_drevo drev' el =
+     match drev' with
+     | Prazno -> Prazno
+     | Sestavljeno (l, x, d) when (not (x = el)) -> Sestavljeno (l, x, sestavi_novo_drevo d el)
+     | Sestavljeno (l, x, d) when (x = el) -> l
+     | _ -> assert false
+     in
+     let rec najdi_drevo_s_korenom x drev' =
+          match drev' with
           | Prazno -> Prazno
-          | Sestavljeno (l, y, d) when x = y -> Sestavljeno (l, x, d)
+          | Sestavljeno (l, y, d) when x = y -> Sestavljeno (sestavi_novo_drevo l (izlusci_pred (Sestavljeno (l, y, d))), izlusci_pred (Sestavljeno (l, x, d)), d)
           | Sestavljeno (l, y, d) when x < y -> Sestavljeno (najdi_drevo_s_korenom x l, y, d)
           | Sestavljeno (l, y, d) when x > y -> Sestavljeno (l, y, najdi_drevo_s_korenom x d)
           | _ -> assert false
-
-*) 
-
-
-
-
+     in najdi_drevo_s_korenom z drev
+     
+     
 (*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*]
  SLOVARJI
 
