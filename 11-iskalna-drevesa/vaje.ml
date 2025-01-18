@@ -305,6 +305,8 @@ let delete z drev =
  strukturo glede na ključe. Ker slovar potrebuje parameter za tip ključa in tip
  vrednosti, ga parametriziramo kot [('key, 'value) dict].
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
+type ('a, 'b) par =
+     | Par of 'a * 'b
 
 
 (*----------------------------------------------------------------------------*]
@@ -315,7 +317,7 @@ let delete z drev =
          /
      "c":-2
 [*----------------------------------------------------------------------------*)
-
+let testni_slovar = Sestavljeno (Sestavljeno (Prazno, Par ("a", 0), Prazno), Par ("b", 1), Sestavljeno (Sestavljeno (Prazno, Par ("c", -2), Prazno), Par ("d", 2), Prazno))
 
 (*----------------------------------------------------------------------------*]
  Funkcija [dict_get key dict] v slovarju poišče vrednost z ključem [key]. Ker
@@ -326,6 +328,33 @@ let delete z drev =
  # dict_get "c" test_dict;;
  - : int option = Some (-2)
 [*----------------------------------------------------------------------------*)
+let izlusci_par urejeni_par =
+     match urejeni_par with
+     | Par (x, y) -> (x, y)
+
+let ( << ) (kljuc1':string) (kljuc2':string) =
+let rec aux indeks kljuc1 kljuc2 =
+     match (String.get kljuc1 indeks), (String.get kljuc2 indeks) with
+     | x, y when Char.code x < Char.code y -> true
+     | x, y when Char.code x > Char.code y -> false
+     | x, y when Char.code x = Char.code y && indeks = 
+     ((min (String.length (kljuc1)) (String.length kljuc2)) - 1) ->
+           if String.length kljuc1 < String.length kljuc2 then true else
+               if  String.length kljuc1 > String.length kljuc2 then false else
+                    failwith "Dva vnosa ne moreta imeti enakega kljuca!"
+     | x, y when Char.code x = Char.code y -> aux (indeks + 1) kljuc1 kljuc2
+     | _ -> assert false
+in aux 0 kljuc1' kljuc2'
+
+let rec slovar_najdi kljuc slovar = 
+     match slovar with
+     | Prazno -> None
+     | Sestavljeno (drev1, koren, drev2) when kljuc = (fst (izlusci_par koren)) -> Some (snd (izlusci_par koren))
+     | Sestavljeno (drev1, koren, drev2) when kljuc << (fst (izlusci_par koren)) -> slovar_najdi kljuc drev1
+     | Sestavljeno (drev1, koren, drev2) when not (kljuc << (fst (izlusci_par koren))) -> slovar_najdi kljuc drev2
+     | _ -> assert false
+
+let rezultat_1 = slovar_najdi "banana" testni_slovar
 
       
 (*----------------------------------------------------------------------------*]
@@ -343,6 +372,36 @@ let delete z drev =
  d : 2
  - : unit = ()
 [*----------------------------------------------------------------------------*)
+let element_sez sez' i' =
+     if i' >= List.length sez' then failwith "indeks ni na seznamu" else
+     let rec pridobi_element_seznama sez i =
+          match sez, i with
+          | glava :: rep, j when j > 0 -> pridobi_element_seznama rep (j-1)
+          | glava :: rep, 0 -> glava
+          | _, _ -> failwith "Nekaj je šo narobe!"
+     in
+     pridobi_element_seznama sez' i'     
+
+
+let natisni_slovar slovar = 
+     let rec aux acc slovar' =
+          match slovar' with
+          | Prazno -> acc
+          | Sestavljeno (levi_slovar, Par (a, b), desni_slovar) -> 
+               aux ([String.cat a (String.cat " : " (string_of_int b))] @ acc) levi_slovar @ (aux [] desni_slovar) 
+          in
+     let seznam_parov = aux [] slovar in
+     
+     for i=0 to (List.length seznam_parov - 1) do
+          let niz = element_sez seznam_parov i in
+          print_endline niz
+     done
+
+
+let natisnjen_testni = natisni_slovar testni_slovar
+
+     
+          
 
 
 (*----------------------------------------------------------------------------*]
