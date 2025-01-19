@@ -422,6 +422,26 @@ let natisnjen_testni = natisni_slovar testni_slovar
  d : 2
  - : unit = ()
 [*----------------------------------------------------------------------------*)
+let vstavi_v_slovar kljuc vrednost slovar =
+     let rec aux kljuc' vrednost' slovar' = 
+          match slovar' with
+          | Sestavljeno (levi_slovar, Par (a, b), desni_slovar) when kljuc' = a -> 
+               Sestavljeno (levi_slovar, Par (a, vrednost'), desni_slovar)
+          | Sestavljeno (ls, Par (a, b), ds) when 
+          Char.code  (String.get (kljuc') 0) < Char.code (String.get a 0) ->
+               Sestavljeno ((aux kljuc' vrednost' ls), Par (a, b), ds)
+          | Sestavljeno (ls, Par (a, b), ds) when
+          Char.code  (String.get (kljuc') 0) > Char.code (String.get a 0) ->
+          Sestavljeno (ls, Par (a, b), aux kljuc' vrednost' ds)
+          | Prazno -> Sestavljeno (Prazno, Par (kljuc', vrednost'), Prazno)
+          | _ -> failwith "Nekaj je šlo narobe!"
+          in
+          aux kljuc vrednost slovar
+
+let vstavljanje_1 = vstavi_v_slovar "1" 14 testni_slovar
+let vstavljanje_2 = vstavi_v_slovar "c" 14 testni_slovar
+
+          
 
 (*----------------------------------------------------------------------------*]
  Napišite primerno signaturo za slovarje [DICT] in naredite implementacijo
@@ -430,7 +450,82 @@ let natisnjen_testni = natisni_slovar testni_slovar
  Modul naj vsebuje prazen slovar [empty] in pa funkcije [get], [insert] in
  [print] (print naj ponovno deluje zgolj na [(string, int) t].
 [*----------------------------------------------------------------------------*)
+module type SLOVAR =
+sig
+type ('a, 'b) slovar
+val prazen_slovar : ('a, 'b) slovar
+val pridobi : 'a -> ('a, 'b) slovar -> 'b option
+val vstavi : 'a -> 'b -> ('a, 'b) slovar -> ('a, 'b) slovar
+val natisni : (string, int) slovar -> unit
+end
 
+
+module Slovar =
+struct
+type ('a, 'b) parr = 
+| Parr of 'a * 'b
+type ('a, 'b) slovar = 
+| Prazen
+| Sestavljen of ('a, 'b) slovar * ('a, 'b) parr * ('a, 'b) slovar
+let prazen_slovar =  Prazen
+(* let ( << ) (kljuc1':string) (kljuc2':string) =
+let rec aux indeks kljuc1 kljuc2 =
+     match (String.get kljuc1 indeks), (String.get kljuc2 indeks) with
+     | x, y when Char.code x < Char.code y -> true
+     | x, y when Char.code x > Char.code y -> false
+     | x, y when Char.code x = Char.code y && indeks = 
+     ((min (String.length (kljuc1)) (String.length kljuc2)) - 1) ->
+           if String.length kljuc1 < String.length kljuc2 then true else
+               if  String.length kljuc1 > String.length kljuc2 then false else
+                    failwith "Dva vnosa ne moreta imeti enakega kljuca!"
+     | x, y when Char.code x = Char.code y -> aux (indeks + 1) kljuc1 kljuc2
+     | _ -> assert false
+     in aux 0 kljuc1' kljuc2'
+*)
+let rec pridobi kljuc slovar = 
+     match slovar with
+     | Prazen -> None
+     | Sestavljen (drev1, Parr (c, d), drev2) when kljuc = c -> Some d
+     | Sestavljen (drev1, Parr (c, d), drev2) when kljuc < c -> pridobi kljuc drev1
+     | Sestavljen (drev1, Parr (c, d), drev2) when not (kljuc < c) -> pridobi kljuc drev2
+     | _ -> assert false
+let vstavi kljuc vrednost slovar =
+     let rec aux kljuc' vrednost' slovar' = 
+          match slovar' with
+          | Sestavljen (levi_slovar, Parr (a, b), desni_slovar) when kljuc' = a -> 
+               Sestavljen (levi_slovar, Parr (a, vrednost'), desni_slovar)
+          | Sestavljen (ls, Parr (a, b), ds) when 
+         kljuc' < a ->
+               Sestavljen ((aux kljuc' vrednost' ls), Parr (a, b), ds)
+          | Sestavljen (ls, Parr (a, b), ds) when
+          kljuc > a ->
+          Sestavljen (ls, Parr (a, b), aux kljuc' vrednost' ds)
+          | Prazen -> Sestavljen (Prazen, Parr (kljuc', vrednost'), Prazen)
+          | _ -> failwith "Nekaj je šlo narobe!"
+          in
+          aux kljuc vrednost slovar
+let element_sez sez' i' =
+     if i' >= List.length sez' then failwith "indeks ni na seznamu" else
+     let rec pridobi_element_seznama sez i =
+          match sez, i with
+          | glava :: rep, j when j > 0 -> pridobi_element_seznama rep (j-1)
+          | glava :: rep, 0 -> glava
+          | _, _ -> failwith "Nekaj je šo narobe!"
+     in
+     pridobi_element_seznama sez' i'     
+let natisni slovar = 
+     let rec aux acc slovar' =
+          match slovar' with
+          | Prazen -> acc
+          | Sestavljen (levi_slovar, Parr (a, b), desni_slovar) -> 
+               aux ([String.cat a (String.cat " : " (string_of_int b))] @ acc) levi_slovar @ (aux [] desni_slovar) 
+          in
+     let seznam_parov = aux [] slovar in
+     for i=0 to (List.length seznam_parov - 1) do
+          let niz = element_sez seznam_parov i in
+          print_endline niz
+     done   
+end
 
 (*----------------------------------------------------------------------------*]
  Funkcija [count (module Dict) list] prešteje in izpiše pojavitve posameznih
